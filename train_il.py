@@ -20,8 +20,12 @@ class NN(tf.keras.Model):
         #           - tf.keras.initializers.GlorotUniform (supposedly equivalent to the previous one)
         #           - tf.keras.initializers.GlorotNormal
         #           - tf.keras.initializers.he_uniform or tf.keras.initializers.he_normal
-
-
+        initializer = tf1.contrib.layers.xavier_initializer()
+        
+        shape = (3,3) #change this to actual shape
+        initializer = tf.keras.initializers.GlorotUniform()
+        self.W = tf.Variable(initializer(shape=shape), name="weights")
+        self.b = tf.Variable(tf.zeros([1,]), name="biases")
 
         ########## Your code ends here ##########
 
@@ -30,8 +34,12 @@ class NN(tf.keras.Model):
         ######### Your code starts here #########
         # We want to perform a forward-pass of the network. Using the weights and biases, this function should give the network output for x where:
         # x is a (? x |O|) tensor that keeps a batch of observations
-
-
+        x = tf.keras.Input(shape=(in_size, 4), name='x')
+        
+        conv1 = tf.keras.layers.Conv2D(32, (3,3), activation = 'tanh')(x)
+        conv2 = tf.keras.layers.Conv2D(32, (3,3), activation = 'tanh')(conv1)
+        conv2 = tf.keras.layers.Flatten()(conv2)
+        p_class = tf.keras.layers.Dense(1, activation = 'softmax', name='p_class')(conv2)
 
         ########## Your code ends here ##########
 
@@ -44,8 +52,9 @@ def loss(y_est, y):
     # - y is the actions the expert took for the corresponding batch of observations
     # At the end your code should return the scalar loss value.
     # HINT: Remember, you can penalize steering (0th dimension) and throttle (1st dimension) unequally
-
-
+    steering_error = y_est[0] - y[0]
+    throttle_error = y_est[1] - y[1]
+    tf.norm()
 
     ########## Your code ends here ##########
     
@@ -78,7 +87,12 @@ def nn(data, args):
         # Helpful Functions: tf.GradientTape(), tf.GradientTape.gradient(), tf.keras.Optimizer.apply_gradients
         # HINT: You did the exact same thing in Homework 1! It is just the networks weights and biases that are different.
         
+        with tf.GradientTape() as tape:
+            y_est = nn_model.call(x)
+            current_loss = loss(y_est, y)
         
+        dl_dW = tape.gradient(current_loss, nn_model.trainable_variables)
+        optimizer.apply_gradients(zip(dl_dW, nn_model.trainable_variables))
 
         ########## Your code ends here ##########
 
