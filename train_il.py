@@ -20,19 +20,31 @@ class NN(tf.keras.Model):
         #           - tf.keras.initializers.GlorotUniform (supposedly equivalent to the previous one)
         #           - tf.keras.initializers.GlorotNormal
         #           - tf.keras.initializers.he_uniform or tf.keras.initializers.he_normal
-        initializer = tf1.contrib.layers.xavier_initializer()
+        # initializer = tf1.contrib.layers.xavier_initializer()
         
-        shape = (3,3) #change this to actual shape
-        initializer = tf.keras.initializers.GlorotUniform()
-        self.W = tf.Variable(initializer(shape=shape), name="weights")
-        self.b = tf.Variable(tf.zeros([1,]), name="biases")
+        # shape = (in_size,32) #change this to actual shape
+        # initializer = tf.keras.initializers.GlorotUniform()
+        # self.W0 = tf.Variable(initializer(shape=shape))
+        # self.b0 = tf.Variable(tf.zeros([32,]))
+        # shape = (32, out_size)
+        # self.W1 = tf.Variable(initializer(shape=shape))
+        # self.b1 = tf.Variable(tf.zeros([out_size,]))
         
-        x_input = tf.keras.Input(shape=(in_size, 1), name='x')
-        conv1 = tf.keras.layers.Conv2D(32, (3,3), activation = 'tanh')(x_input)
-        conv2 = tf.keras.layers.Conv2D(32, (3,3), activation = 'tanh')(conv1)
-        conv2 = tf.keras.layers.Flatten()(conv2)
-        y_est = tf.keras.layers.Dense((outsize, dim), activation = 'tanh', name='y_est')(conv2)
-
+        # x_input = tf.keras.Input(shape=(in_size, 1), name='x')
+        # conv1 = tf.keras.layers.Conv2D(32, (3,3), activation = 'tanh')(x_input)
+        # conv2 = tf.keras.layers.Conv2D(32, (3,3), activation = 'tanh')(conv1)
+        # conv2 = tf.keras.layers.Flatten()(conv2)
+        # y_est = tf.keras.layers.Dense((outsize, dim), activation = 'tanh', name='y_est')(conv2)
+        self.model = tf.keras.Sequential(
+            [
+                tf.keras.Input(shape=(in_size,), name='x'),
+                tf.keras.layers.Dense(32, activation = 'tanh', name = 'L1', kernel_initializer='glorot_uniform', bias_initializer='zeros'),
+                tf.keras.layers.Dense(32, activation = 'tanh', name = 'L2', kernel_initializer='glorot_uniform', bias_initializer='zeros'),
+                tf.keras.layers.Dense(out_size, name = 'y_est', kernel_initializer='glorot_uniform', bias_initializer='zeros')
+            ]
+        )
+        
+        self.model.summary()
         ########## Your code ends here ##########
 
     def call(self, x):
@@ -40,8 +52,7 @@ class NN(tf.keras.Model):
         ######### Your code starts here #########
         # We want to perform a forward-pass of the network. Using the weights and biases, this function should give the network output for x where:
         # x is a (? x |O|) tensor that keeps a batch of observations
-        xW = tf.matmul(x, self.W)
-        y_est = tf.add(xW, self.b)
+        y_est = self.model(x)
 
         return y_est
 
@@ -59,8 +70,7 @@ def loss(y_est, y):
     steering_error = y_est[:,0] - y[:,0]
     throttle_error = y_est[:,1] - y[:,1]
     
-    loss = tf.sum(0.8*tf.norm(steering_error))
-    loss += tf.sum(1*tf.norm(throttle_error))
+    loss = tf.add(3*tf.norm(steering_error), 1*tf.norm(throttle_error))
     loss = tf.math.reduce_mean(loss)
     return loss
 
