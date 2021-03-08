@@ -70,7 +70,7 @@ def loss(y_est, y):
     steering_error = y_est[:,0] - y[:,0]
     throttle_error = y_est[:,1] - y[:,1]
     
-    loss = tf.add(3*tf.norm(steering_error), 1*tf.norm(throttle_error))
+    loss = tf.add(6*tf.norm(steering_error), 1*tf.norm(throttle_error))
     loss = tf.math.reduce_mean(loss)
     return loss
 
