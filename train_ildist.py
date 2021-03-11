@@ -27,7 +27,7 @@ class NN(tf.keras.Model):
         self.model = tf.keras.Sequential(
             [
                 tf.keras.Input(shape=(in_size,), name='x'),
-                tf.keras.layers.Dense(16, activation = 'tanh', name = 'L1', kernel_initializer='glorot_normal', bias_initializer='zeros'),
+                tf.keras.layers.Dense(8, activation = 'tanh', name = 'L1', kernel_initializer='glorot_normal', bias_initializer='zeros'),
                 tf.keras.layers.Dense(nn_output_size, name = 'y_est', kernel_initializer='glorot_normal', bias_initializer='zeros')
             ]
         )
@@ -61,13 +61,16 @@ def loss(y_est, y):
     # HINT: You may find the classes of tensorflow_probability.distributions (imported as tfd) useful.
     #       In particular, we used MultivariateNormalTriL, but it is not the only way.
     mu = y_est[:, 0:1]
-    L = tf.convert_to_tensor([[y_est[:,2], y_est[:,3]], [y_est[:,4], y_est[:,5]]], dtype=tf.float32)
-    eps = 0.0001
-    sigma = tf.add(tf.matmul(L, tf.transpose(L)), eps * tf.eye(2, batch_shape=[L.shape[0]]))
+    L = tf.reshape(y_est[:,2:5], shape=(2,2))
+    print('L shape: ', L)
+    eps = 0.01
+    sigma = tf.add(tf.matmul(L, tf.transpose(L, perm=[0,2,1])), eps * tf.eye(2, batch_shape=[L.shape[0]]))
     
     distributions = tfd.MultivariateNormalFullCovariance(loc = mu, covariance_matrix = sigma)
-    log = tf.log(distributions.prob(y).eval())
+
+    log = distributions.log_prob(y)
     loss = -tf.reduce_mean(log)
+    # loss = tf.reduce_mean(tf.norm(y_est))
     return loss
     
     ########## Your code ends here ##########
