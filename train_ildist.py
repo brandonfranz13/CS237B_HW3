@@ -23,7 +23,16 @@ class NN(tf.keras.Model):
         #           - tf.keras.initializers.GlorotNormal
         #           - tf.keras.initializers.he_uniform or tf.keras.initializers.he_normal
         
+        nn_output_size = out_size^2 + out_size
+        self.model = tf.keras.Sequential(
+            [
+                tf.keras.Input(shape=(in_size,), name='x'),
+                tf.keras.layers.Dense(16, activation = 'tanh', name = 'L1', kernel_initializer='glorot_normal', bias_initializer='zeros'),
+                tf.keras.layers.Dense(nn_output_size, name = 'y_est', kernel_initializer='glorot_normal', bias_initializer='zeros')
+            ]
+        )
         
+        self.model.summary()
         
         ########## Your code ends here ##########
 
@@ -33,8 +42,10 @@ class NN(tf.keras.Model):
         # We want to perform a forward-pass of the network. Using the weights and biases, this function should give the network output for x where:
         # x is a (? x |O|) tensor that keeps a batch of observations
         # IMPORTANT: First two columns of the output tensor must correspond to the mean vector!
+
+        y_est = self.model(x)
         
-        
+        return y_est
         
         ########## Your code ends here ##########
 
@@ -49,8 +60,15 @@ def loss(y_est, y):
     # At the end your code should return the scalar loss value.
     # HINT: You may find the classes of tensorflow_probability.distributions (imported as tfd) useful.
     #       In particular, we used MultivariateNormalTriL, but it is not the only way.
+    mu = y_est[:, 0:1]
+    L = tf.convert_to_tensor([[y_est[:,2], y_est[:,3]], [y_est[:,4], y_est[:,5]]], dtype=tf.float32)
+    eps = 0.0001
+    sigma = tf.add(tf.matmul(L, tf.transpose(L)), eps * tf.eye(2, batch_shape=[L.shape[0]]))
     
-    
+    distributions = tfd.MultivariateNormalFullCovariance(loc = mu, covariance_matrix = sigma)
+    log = tf.log(distributions.prob(y).eval())
+    loss = -tf.reduce_mean(log)
+    return loss
     
     ########## Your code ends here ##########
 
@@ -83,7 +101,12 @@ def nn(data, args):
         # Helpful Functions: tf.GradientTape(), tf.GradientTape.gradient(), tf.keras.Optimizer.apply_gradients
         # HINT: You did the exact same thing in Homework 1! It is just the networks weights and biases that are different.
        
-       
+        with tf.GradientTape() as tape:
+            y_est = nn_model.call(x)
+            current_loss = loss(y_est, y)
+            
+        dl_dW = tape.gradient(current_loss, nn_model.trainable_variables)
+        optimizer.apply_gradients(zip(dl_dW, nn_model.trainable_variables))
        
         ########## Your code ends here ##########
 
