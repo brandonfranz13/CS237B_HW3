@@ -28,7 +28,7 @@ class NN(tf.keras.Model):
             [
                 tf.keras.Input(shape=(in_size,), name='x'),
                 tf.keras.layers.Dense(16, activation = 'tanh', name = 'L1', kernel_initializer='glorot_normal', bias_initializer='zeros'),
-                tf.keras.layers.Dense(16, activation = 'tanh', name = 'L2', kernel_initializer='glorot_normal', bias_initializer='zeros'),
+                #tf.keras.layers.Dense(16, activation = 'tanh', name = 'L2', kernel_initializer='glorot_normal', bias_initializer='zeros'),
                 tf.keras.layers.Dense(nn_output_size, name = 'y_est', kernel_initializer='glorot_normal', bias_initializer='zeros')
             ]
         )
@@ -73,7 +73,7 @@ def loss(y_est, y):
 
     log = distributions.log_prob(y)
     loss = -tf.reduce_mean(log)
-    # loss = tf.reduce_mean(tf.norm(y_est))
+    
     return loss
     
     ########## Your code ends here ##########
