@@ -27,7 +27,8 @@ class NN(tf.keras.Model):
         self.model = tf.keras.Sequential(
             [
                 tf.keras.Input(shape=(in_size,), name='x'),
-                tf.keras.layers.Dense(8, activation = 'tanh', name = 'L1', kernel_initializer='glorot_normal', bias_initializer='zeros'),
+                tf.keras.layers.Dense(16, activation = 'sigmoid', name = 'L1', kernel_initializer='glorot_normal', bias_initializer='zeros'),
+                tf.keras.layers.Dense(16, activation = 'sigmoid', name = 'L2', kernel_initializer='glorot_normal', bias_initializer='zeros'),
                 tf.keras.layers.Dense(nn_output_size, name = 'y_est', kernel_initializer='glorot_normal', bias_initializer='zeros')
             ]
         )
@@ -60,11 +61,13 @@ def loss(y_est, y):
     # At the end your code should return the scalar loss value.
     # HINT: You may find the classes of tensorflow_probability.distributions (imported as tfd) useful.
     #       In particular, we used MultivariateNormalTriL, but it is not the only way.
-    mu = y_est[:, 0:1]
-    L = tf.reshape(y_est[:,2:5], shape=(2,2))
-    print('L shape: ', L)
-    eps = 0.01
-    sigma = tf.add(tf.matmul(L, tf.transpose(L, perm=[0,2,1])), eps * tf.eye(2, batch_shape=[L.shape[0]]))
+    mu = y_est[:, :2]
+    L = [[y_est[:, 2], y_est[:,3]],
+         [y_est[:, 4], y_est[:,5]]]
+    L = tf.transpose(L, perm=[2,0,1])
+
+    eps = 0.0001
+    sigma = tf.add(tf.matmul(L, tf.transpose(L, perm=[0,2,1])), eps * tf.eye(2))
     
     distributions = tfd.MultivariateNormalFullCovariance(loc = mu, covariance_matrix = sigma)
 
