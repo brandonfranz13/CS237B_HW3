@@ -1,2 +1,2 @@
-model_checkpoint_path: "intersection_left_ILDIST"
-all_model_checkpoint_paths: "intersection_left_ILDIST"
+model_checkpoint_path: "intersection_all_CoIL"
+all_model_checkpoint_paths: "intersection_all_CoIL"

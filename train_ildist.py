@@ -27,8 +27,8 @@ class NN(tf.keras.Model):
         self.model = tf.keras.Sequential(
             [
                 tf.keras.Input(shape=(in_size,), name='x'),
-                tf.keras.layers.Dense(16, activation = 'sigmoid', name = 'L1', kernel_initializer='glorot_normal', bias_initializer='zeros'),
-                tf.keras.layers.Dense(16, activation = 'sigmoid', name = 'L2', kernel_initializer='glorot_normal', bias_initializer='zeros'),
+                tf.keras.layers.Dense(16, activation = 'tanh', name = 'L1', kernel_initializer='glorot_normal', bias_initializer='zeros'),
+                tf.keras.layers.Dense(16, activation = 'tanh', name = 'L2', kernel_initializer='glorot_normal', bias_initializer='zeros'),
                 tf.keras.layers.Dense(nn_output_size, name = 'y_est', kernel_initializer='glorot_normal', bias_initializer='zeros')
             ]
         )

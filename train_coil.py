@@ -20,9 +20,22 @@ class NN(tf.keras.Model):
         #           - tf.keras.initializers.GlorotUniform (supposedly equivalent to the previous one)
         #           - tf.keras.initializers.GlorotNormal
         #           - tf.keras.initializers.he_uniform or tf.keras.initializers.he_normal
+        # self.model = tf.keras.Sequential(
+        #     [
+        #         tf.keras.Input(shape=(in_size,), name='x'),
+        #         tf.keras.layers.Dense(32, activation = 'tanh', name = 'L1', kernel_initializer='glorot_uniform', bias_initializer='zeros'),
+        #         tf.keras.layers.Dense(32, activation = 'tanh', name = 'L2', kernel_initializer='glorot_uniform', bias_initializer='zeros'),
+        #         tf.keras.layers.Dense(out_size, name = 'y_est', kernel_initializer='glorot_uniform', bias_initializer='zeros')
+        #     ]
+        # )
         
+        # self.model.summary()
         
-        
+        self.L1 = tf.keras.layers.Dense(32, activation = 'tanh', name = 'L1', kernel_initializer='glorot_uniform', bias_initializer='zeros')
+        self.L2 = tf.keras.layers.Dense(32, activation = 'tanh', name = 'L2', kernel_initializer='glorot_uniform', bias_initializer='zeros')
+        self.y_est_left = tf.keras.layers.Dense(out_size, name = 'y_est_left', kernel_initializer='glorot_uniform', bias_initializer='zeros')
+        self.y_est_right = tf.keras.layers.Dense(out_size, name = 'y_est_right', kernel_initializer='glorot_uniform', bias_initializer='zeros')
+        self.y_est_straight = tf.keras.layers.Dense(out_size, name = 'y_est_straight', kernel_initializer='glorot_uniform', bias_initializer='zeros')
         ########## Your code ends here ##########
 
     def call(self, x, u):
@@ -35,6 +48,24 @@ class NN(tf.keras.Model):
         # FYI: For the intersection scenario, u=0 means the goal is to turn left, u=1 straight, and u=2 right. 
         # HINT 1: Looping over all data samples may not be the most computationally efficient way of doing branching
         # HINT 2: While implementing this, we found tf.math.equal and tf.cast useful. This is not necessarily a requirement though.
+        # y_est_shape = (x.shape[0], 2)
+        # print('shape: ', y_est_shape)
+        
+        trunk = self.L2(self.L1(x))
+        yl = tf.cast(self.y_est_left(trunk), dtype=tf.float32)
+        yr = tf.cast(self.y_est_right(trunk), dtype=tf.float32)
+        ys = tf.cast(self.y_est_straight(trunk), dtype=tf.float32)
+        
+        mask_left = tf.equal(u, tf.cast(0, dtype=tf.int8))
+        mask_straight = tf.equal(u, tf.cast(1, dtype=tf.int8))
+        mask_right = tf.equal(u, tf.cast(2, dtype=tf.int8))
+        y_est_left = tf.where(mask_left, yl, tf.zeros(2))
+        y_est_straight = tf.where(mask_straight, ys, tf.zeros(2))
+        y_est_right = tf.where(mask_right, yr, tf.zeros(2))
+        
+        y_est = tf.add(y_est_left, tf.add(y_est_straight, y_est_right))
+        
+        return y_est
         
 
 
@@ -50,7 +81,12 @@ def loss(y_est, y):
     # At the end your code should return the scalar loss value.
     # HINT: Remember, you can penalize steering (0th dimension) and throttle (1st dimension) unequally
 
-
+    steering_error = y_est[:,0] - y[:,0]
+    throttle_error = y_est[:,1] - y[:,1]
+    
+    loss = tf.add(6*tf.norm(steering_error), 1*tf.norm(throttle_error))
+    loss = tf.math.reduce_mean(loss)
+    return loss
 
     ########## Your code ends here ##########
    
@@ -82,7 +118,12 @@ def nn(data, args):
         # 4. Run an optimization step on the weights.
         # Helpful Functions: tf.GradientTape(), tf.GradientTape.gradient(), tf.keras.Optimizer.apply_gradients
         # HINT: You did the exact same thing in Homework 1! It is just the networks weights and biases that are different.
+        with tf.GradientTape() as tape:
+            y_est = nn_model.call(x, u)
+            current_loss = loss(y_est, y)
         
+        dl_dW = tape.gradient(current_loss, nn_model.trainable_variables)
+        optimizer.apply_gradients(zip(dl_dW, nn_model.trainable_variables))
         
 
         ########## Your code ends here ##########
