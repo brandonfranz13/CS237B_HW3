@@ -59,7 +59,7 @@ if __name__ == '__main__':
             # At the end, your code should set a_robot variable as a 1x2 numpy array that consists of steering and throttle values, respectively
             # HINT: You can use np.clip to threshold a_robot with respect to the magnitude constraints
 
-
+            a_robot = np.ones((1,2))
 
             ########## Your code ends here ##########
             
@@ -76,7 +76,7 @@ if __name__ == '__main__':
             # At the end, your code should set probs variable as a 1 x |G| numpy array that consists of the probability of each goal under obs and a_human
             # HINT: This should be very similar to the part in intent_inference.py 
 
-
+            probs = np.ones((1,3))
 
             ########## Your code ends here ##########
 
